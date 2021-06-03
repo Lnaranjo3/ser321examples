@@ -16,6 +16,8 @@ write a response back
 
 package funHttpServer;
 
+import jdk.nashorn.internal.parser.JSONParser;
+
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
@@ -25,6 +27,7 @@ import java.util.Random;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.nio.charset.Charset;
+import org.json.JSONObject;
 
 class WebServer {
   public static void main(String args[]) {
@@ -200,22 +203,28 @@ class WebServer {
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
           // extract path parameters
           query_pairs = splitQuery(request.replace("multiply?", ""));
-
-          // extract required fields from parameters
-          Integer num1 = Integer.parseInt(query_pairs.get("num1"));
-          Integer num2 = Integer.parseInt(query_pairs.get("num2"));
-
-          // do math
-          Integer result = num1 * num2;
-
-          // Generate response
-          builder.append("HTTP/1.1 200 OK\n");
-          builder.append("Content-Type: text/html; charset=utf-8\n");
-          builder.append("\n");
-          builder.append("Result is: " + result);
+          Integer result = 0;
 
           // TODO: Include error handling here with a correct error code and
           // a response that makes sense
+
+          if (query_pairs.size() == 2) {
+            // extract required fields from parameters
+            Integer num1 = Integer.parseInt(query_pairs.get("num1"));
+            Integer num2 = Integer.parseInt(query_pairs.get("num2"));
+            // do math
+            result = num1 * num2;
+            // Generate response
+            builder.append("HTTP/1.1 200 OK\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Result is: " + result);
+
+          } else {
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            System.out.println("Wrong parameters passed. Server expected 2 parameters but received "
+                    + query_pairs.size());
+          }
 
         } else if (request.contains("github?")) {
           // pulls the query from the request and runs it with GitHub's REST API
@@ -232,12 +241,28 @@ class WebServer {
           System.out.println(json);
 
           builder.append("Check the todos mentioned in the Java source file");
-          // TODO: Parse the JSON returned by your fetch and create an appropriate
-          // response
+          // TODO: Parse the JSON returned by your fetch and create an appropriate response
           // and list the owner name, owner id and name of the public repo on your webpage, e.g.
           // amehlhase, 46384989 -> memoranda
           // amehlhase, 46384989 -> ser316examples
           // amehlhase, 46384989 -> test316
+          String ownerName = "";
+          String ownerId = "";
+          String publicRepo = "";
+
+          JSONObject obj = new JSONObject(json);
+
+          ownerName = obj.getJSONObject("owner").getString("login");
+          ownerId = obj.getJSONObject("owner").getString("id");
+          publicRepo = obj.getJSONObject("owner").getString("repos_url");
+
+          System.out.println("Owner's name " + ownerName);
+          System.out.println("Owner's id " + ownerId);
+          System.out.println("Public repos " + publicRepo);
+
+          builder.append("Owner's name " + ownerName);
+          builder.append("Owner's id " + ownerId);
+          builder.append("Public repos " + publicRepo);
 
         } else {
           // if the request is not recognized at all

@@ -23,5 +23,19 @@ task FunWebServer(type: JavaExec) {
   main = 'funHttpServer.WebServer'
   standardInput = System.in
 }
+//configurations {
+//  implementation
+//}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  // https://mvnrepository.com/artifact/org.json/json
+  implementation group: 'org.json', name: 'json', version: '20210307'
+
+}
+
 
 
